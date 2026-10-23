@@ -29,19 +29,54 @@
     setTimeout(function () { copy.textContent = 'Copy'; }, 1800);
   });
 
+  // Contact form: sent by FormSubmit (formsubmit.co) to the inbox below. The very first
+  // message triggers a one-time activation email to that inbox; after that, messages arrive.
+  var FORM_ENDPOINT = 'https://formsubmit.co/ajax/theanalyst.automation@gmail.com';
   var form = document.getElementById('contactForm');
   var msg = document.getElementById('formMsg');
+  function showMsg(text, ok) {
+    msg.hidden = false;
+    msg.style.color = ok ? '' : 'var(--fail)';
+    msg.style.borderColor = ok ? '' : 'rgba(255,122,110,.4)';
+    msg.textContent = text;
+  }
   if (form) form.addEventListener('submit', function (e) {
     e.preventDefault();
     var name = document.getElementById('f-name');
     var email = document.getElementById('f-email');
-    msg.hidden = false;
     if (!name.value.trim() || !email.value.trim() || !email.checkValidity()) {
-      msg.style.color = 'var(--fail)'; msg.style.borderColor = 'rgba(255,122,110,.4)';
-      msg.textContent = 'Add your name and a valid work email, then try again.';
+      showMsg('Add your name and a valid work email, then try again.', false);
       return;
     }
-    msg.style.color = ''; msg.style.borderColor = '';
-    msg.textContent = 'Looks good. This is a preview form, so nothing was sent. Once it is connected to your inbox, messages will arrive there.';
+    if (form.elements._honey.value) return;   // filled in only by bots
+
+    var btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    fetch(FORM_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        name: name.value.trim(),
+        email: email.value.trim(),   // FormSubmit sets this as the reply-to address
+        company: document.getElementById('f-company').value.trim(),
+        need: document.getElementById('f-need').value,
+        message: document.getElementById('f-msg').value.trim(),
+        _subject: 'New enquiry from the AgentM website',
+        _template: 'table'
+      })
+    })
+      .then(function (r) { return r.json().catch(function () { return {}; }); })
+      .then(function (data) {
+        if (String(data.success) === 'true') {
+          form.reset();
+          showMsg('Thanks, your message was sent. We will get back to you by email soon.', true);
+        } else {
+          showMsg(data.message || 'Your message could not be sent. Please email us at theanalyst.automation@gmail.com.', false);
+        }
+      })
+      .catch(function () {
+        showMsg('Your message could not be sent. Check your connection, or email us at theanalyst.automation@gmail.com.', false);
+      })
+      .then(function () { btn.disabled = false; btn.textContent = 'Send message'; });
   });
 })();

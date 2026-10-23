@@ -21,5 +21,6 @@ Open the folder in VS Code, right-click index.html → "Open with Live Server".
 
 ## Before launch
 - Replace placeholder stats, testimonial and client logos
-- Update the email (hello@agentm.ai)
-- Connect the contact form (e.g. Formspree, Web3Forms, or your own API)
+- Contact form: sent via FormSubmit to theanalyst.automation@gmail.com (endpoint in js/main.js).
+  The first submission sends a one-time activation email to that inbox; click "Activate Form".
+  Afterwards, FormSubmit offers a random alias: swap it into FORM_ENDPOINT to keep the address out of the page.

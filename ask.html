@@ -39,7 +39,7 @@
     <div class="wrap">
       <span class="label">/ask-your-docs · free tool</span>
       <h1>Ask questions about your documents.</h1>
-      <p class="lede">Add a PowerPoint, Word, Excel or PDF file and ask anything about it in plain English. The AI runs inside your browser, so your files are never uploaded anywhere.</p>
+      <p class="lede">Add a PDF, PowerPoint, Word or Excel file and ask anything about it. An AI agent reads it, splits it into passages, embeds them into a vector database in your browser, then finds, re-ranks and answers from the right passage, with the page it came from. Your files are never uploaded.</p>
     </div>
   </section>
 
@@ -60,14 +60,15 @@
         </div>
 
         <div class="panel">
-          <h2 class="panel-title">2. Load the AI model</h2>
-          <p class="side-note">It runs on your own device. The download happens once; your browser keeps it for next time.</p>
-          <label for="modelSelect" class="sr-only">AI model</label>
+          <h2 class="panel-title">2. Optional: load a chat model</h2>
+          <p class="side-note">Exact answers work straight away on any device. A chat model adds full written answers, summaries and follow-up questions. It runs on your device and downloads once.</p>
+          <label for="modelSelect" class="sr-only">Chat model</label>
           <select id="modelSelect">
+            <option value="Llama-3.2-3B-Instruct" data-name="Llama 3.2 3B">Recommended · Llama 3.2 3B (about 2 GB)</option>
             <option value="Llama-3.2-1B-Instruct" data-name="Llama 3.2 1B">Fast · Llama 3.2 1B (under 1 GB)</option>
-            <option value="Llama-3.2-3B-Instruct" data-name="Llama 3.2 3B">Better answers · Llama 3.2 3B (about 2 GB)</option>
+            <option value="Llama-3.1-8B-Instruct" data-name="Llama 3.1 8B">Best · Llama 3.1 8B (about 5 GB, strong GPU)</option>
           </select>
-          <button class="btn btn-primary" id="loadModel" type="button">Load model</button>
+          <button class="btn btn-primary" id="loadModel" type="button">Load chat model</button>
           <div class="progress" id="progress" hidden>
             <div class="bar"><span id="progressBar"></span></div>
             <p id="progressText"></p>
@@ -95,12 +96,19 @@
     <div class="wrap">
       <div class="sec-head">
         <span class="label">/how-it-works</span>
-        <h2>Private by design.</h2>
+        <h2>An agent that reads before it answers.</h2>
       </div>
+      <ol class="steps pipeline">
+        <li><div><h3>Read</h3><p>Text is pulled from every page, slide, sheet and paragraph, keeping track of where it came from.</p></div></li>
+        <li><div><h3>Chunk</h3><p>The text is split into overlapping passages of about 700 characters, so no fact is cut in half.</p></div></li>
+        <li><div><h3>Embed &amp; store</h3><p>Each passage becomes a vector (bge-small) and is saved in a vector database inside your browser, so documents are ready next time.</p></div></li>
+        <li><div><h3>Retrieve &amp; re-rank</h3><p>Each question runs keyword and vector search together, then a cross-encoder re-ranks the candidates by how well they answer it.</p></div></li>
+        <li><div><h3>Answer</h3><p>A reading model picks the exact answer and the sentence it came from. Load a chat model for full written answers with citations.</p></div></li>
+      </ol>
       <div class="guard">
-        <div><h3>Your files stay with you</h3><p>Documents are read inside this browser tab and are never uploaded. Close the tab and they're gone.</p></div>
-        <div><h3>Best for finding and explaining</h3><p>Ask what a slide says, summarise a report or look up a figure. It isn't built for heavy calculations across large spreadsheets.</p></div>
-        <div><h3>Works best on a computer</h3><p>The AI model needs WebGPU, available in recent Chrome and Edge. Without it, you can still search and see matching passages.</p></div>
+        <div><h3>Your files stay with you</h3><p>Everything runs on your device. Your library is stored only in this browser; remove a file with × to delete it.</p></div>
+        <div><h3>Best for facts and explanations</h3><p>Ask who, what, when or how much, what a slide says, or for a summary. It isn't built for heavy calculations across large spreadsheets.</p></div>
+        <div><h3>Works on any modern browser</h3><p>Exact answers run anywhere. The chat model needs WebGPU, available in recent Chrome and Edge on a computer.</p></div>
       </div>
     </div>
   </section>

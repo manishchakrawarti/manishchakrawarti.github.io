@@ -337,3 +337,11 @@ code { font-family: var(--f-mono); font-size: .88em; color: var(--fg); }
 .code .s { color: var(--ok); }
 @media (max-width: 960px) { .mon-layout, .tools { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .mon-log .ln { padding-left: 0; text-indent: 0; } .mon-log { height: 300px; } }
+
+/* Ask your documents: answers and agent trace */
+.msg .answer { font-size: 1.0625rem; color: var(--fg); }
+.msg .evidence { display: inline-block; margin-top: 6px; color: var(--muted); }
+.msg .cite { display: inline-block; margin-top: 4px; font-family: var(--f-mono); font-size: .72rem; color: var(--amber); }
+.trace li { white-space: normal; }
+.sources + .sources { margin-top: 4px; border-top: 0; padding-top: 0; }
+.steps.pipeline { max-width: 820px; }

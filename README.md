@@ -9,7 +9,7 @@ Static site: HTML + CSS + JavaScript. No build step.
 - css/styles.css  – all styles (colours are variables at the top)
 - js/main.js      – mobile menu, copy-email button, contact form
 - js/monitor.js   – browser port of ../job_monitoring (classifier, healer, sql_guard, run loop) against a simulated BigQuery table
-- js/ask.js       – document parsing, search and the in-browser model for ask.html
+- js/ask.js       – the document agent for ask.html: parse → chunk → embed (bge-small) → IndexedDB vector store → hybrid search → cross-encoder re-rank → exact answer (roberta-squad2) or chat answer (WebLLM)
 - assets/         – favicon, images/logos, samples/ (demo documents from ../gen_ai_agent/docs)
 
 ## Keeping the demos in sync

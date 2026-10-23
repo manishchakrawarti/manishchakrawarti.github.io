@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ask Your Documents | AgentM</title>
+  <meta name="description" content="Ask questions about your PowerPoint, Word, Excel and PDF files. Free, and private: the AI runs in your browser, so your files are never uploaded.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="AgentM home">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+        <rect x="0.75" y="0.75" width="28.5" height="28.5" rx="7" fill="#101823" stroke="#2A3A4D" stroke-width="1.5"/>
+        <path d="M7 21V9.5l8 7.5 8-7.5V21" fill="none" stroke="#E7EDF3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="15" cy="17" r="2.4" fill="#F2B544"/>
+      </svg>
+      <span>Agent<b>M</b></span>
+    </a>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav">
+      <a href="index.html#services">Services</a>
+      <a href="index.html#agent-m">Agent M</a>
+      <a href="monitor.html">Live demo</a>
+      <a class="active" href="ask.html" aria-current="page">Ask your docs</a>
+      <a href="index.html#engage">Engagements</a>
+      <a class="btn btn-primary" href="index.html#contact">Book a strategy call</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="ask-hero">
+    <div class="wrap">
+      <span class="label">/ask-your-docs · free tool</span>
+      <h1>Ask questions about your documents.</h1>
+      <p class="lede">Add a PowerPoint, Word, Excel or PDF file and ask anything about it in plain English. The AI runs inside your browser, so your files are never uploaded anywhere.</p>
+    </div>
+  </section>
+
+  <section class="ask-app">
+    <div class="wrap ask-layout">
+      <div class="ask-side">
+        <div class="panel">
+          <h2 class="panel-title">1. Add documents</h2>
+          <label class="drop" id="drop">
+            <input class="sr-only" type="file" id="fileInput" multiple accept=".pptx,.docx,.xlsx,.xlsm,.xls,.ods,.csv,.pdf,.txt,.md,.doc,.ppt">
+            <strong>Drop files here</strong>
+            <span>or <span class="link">browse your computer</span></span>
+            <small>PPTX · DOCX · XLSX · XLS · CSV · PDF · TXT, up to 50 MB each</small>
+          </label>
+          <button class="btn btn-ghost" id="sampleBtn" type="button">No file to hand? Try a sample PDF</button>
+          <ul class="file-list" id="fileList"></ul>
+          <p class="side-note" id="searchMode"></p>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel-title">2. Load the AI model</h2>
+          <p class="side-note">It runs on your own device. The download happens once; your browser keeps it for next time.</p>
+          <label for="modelSelect" class="sr-only">AI model</label>
+          <select id="modelSelect">
+            <option value="Llama-3.2-1B-Instruct" data-name="Llama 3.2 1B">Fast · Llama 3.2 1B (under 1 GB)</option>
+            <option value="Llama-3.2-3B-Instruct" data-name="Llama 3.2 3B">Better answers · Llama 3.2 3B (about 2 GB)</option>
+          </select>
+          <button class="btn btn-primary" id="loadModel" type="button">Load model</button>
+          <div class="progress" id="progress" hidden>
+            <div class="bar"><span id="progressBar"></span></div>
+            <p id="progressText"></p>
+          </div>
+          <p class="model-status" id="modelStatus" role="status"></p>
+        </div>
+      </div>
+
+      <div class="panel chat">
+        <div class="chat-head">
+          <h2 class="panel-title">3. Ask a question</h2>
+          <button class="copy-btn" id="clearChat" type="button">Clear chat</button>
+        </div>
+        <div class="msgs" id="msgs" aria-live="polite"></div>
+        <form class="ask-form" id="askForm">
+          <label for="question" class="sr-only">Your question</label>
+          <textarea id="question" rows="1" placeholder="Ask about your documents…"></textarea>
+          <button class="btn btn-primary" id="sendBtn" type="submit">Ask</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">/how-it-works</span>
+        <h2>Private by design.</h2>
+      </div>
+      <div class="guard">
+        <div><h3>Your files stay with you</h3><p>Documents are read inside this browser tab and are never uploaded. Close the tab and they're gone.</p></div>
+        <div><h3>Best for finding and explaining</h3><p>Ask what a slide says, summarise a report or look up a figure. It isn't built for heavy calculations across large spreadsheets.</p></div>
+        <div><h3>Works best on a computer</h3><p>The AI model needs WebGPU, available in recent Chrome and Edge. Without it, you can still search and see matching passages.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">/self-hosted · for teams</span>
+        <h2>The same agent, on your own server.</h2>
+        <p class="lede">For a shared knowledge base, we run the team edition of this assistant inside your network. Documents are indexed once, everyone asks questions in a chat window, and no API keys or cloud AI services are involved.</p>
+      </div>
+      <div class="guard">
+        <div><h3>Index once, ask any time</h3><p>PDFs are split into passages, embedded with a local model and kept in a Chroma vector store. Re-index when documents change.</p></div>
+        <div><h3>An agent that checks first</h3><p>A LlamaIndex ReAct agent must search the knowledge base before every answer, and says so when the answer isn't in your documents.</p></div>
+        <div><h3>Fully local models</h3><p>Llama 3.2 for answers and nomic-embed-text for search, both served by Ollama. Ships as a Docker image with a Gradio chat UI.</p></div>
+      </div>
+      <pre class="code" aria-label="Running the self-hosted edition"><span class="c"># pull the local models once</span>
+ollama pull llama3.2:3b
+ollama pull nomic-embed-text
+
+<span class="c"># index the PDFs in docs/, then start the chat UI on :8080</span>
+python ingest.py
+python app.py</pre>
+      <div class="cta-row"><a class="btn btn-ghost" href="index.html#contact">Want this on your company's documents? Talk to us</a></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 AgentM. AI &amp; data engineering.</span>
+    <nav aria-label="Footer">
+      <a href="index.html#services">Services</a>
+      <a href="index.html#agent-m">Agent M</a>
+      <a href="monitor.html">Live demo</a>
+      <a href="ask.html">Ask your docs</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script type="module" src="js/ask.js"></script>
+</body>
+</html>

@@ -14,8 +14,9 @@
   var lines = document.querySelectorAll('#log .ln');
   lines.forEach(function (el, i) { el.style.animationDelay = (i * 0.09) + 's'; });
 
+  // The copy button and contact form only exist on the home page.
   var copy = document.getElementById('copyEmail');
-  copy.addEventListener('click', function () {
+  if (copy) copy.addEventListener('click', function () {
     var text = document.getElementById('email').textContent;
     function selectIt() {
       var r = document.createRange(); r.selectNodeContents(document.getElementById('email'));
@@ -30,7 +31,7 @@
 
   var form = document.getElementById('contactForm');
   var msg = document.getElementById('formMsg');
-  form.addEventListener('submit', function (e) {
+  if (form) form.addEventListener('submit', function (e) {
     e.preventDefault();
     var name = document.getElementById('f-name');
     var email = document.getElementById('f-email');

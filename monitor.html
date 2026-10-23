@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Agent M Live Demo | AgentM</title>
+  <meta name="description" content="Break a data pipeline and watch Agent M diagnose and fix it. A live, in-browser demo of our job monitoring and self-healing engine for Python and BigQuery jobs.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="AgentM home">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+        <rect x="0.75" y="0.75" width="28.5" height="28.5" rx="7" fill="#101823" stroke="#2A3A4D" stroke-width="1.5"/>
+        <path d="M7 21V9.5l8 7.5 8-7.5V21" fill="none" stroke="#E7EDF3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="15" cy="17" r="2.4" fill="#F2B544"/>
+      </svg>
+      <span>Agent<b>M</b></span>
+    </a>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav">
+      <a href="index.html#services">Services</a>
+      <a href="index.html#agent-m">Agent M</a>
+      <a class="active" href="monitor.html" aria-current="page">Live demo</a>
+      <a href="ask.html">Ask your docs</a>
+      <a href="index.html#engage">Engagements</a>
+      <a class="btn btn-primary" href="index.html#contact">Book a strategy call</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="ask-hero">
+    <div class="wrap">
+      <span class="label">/agent-m · live demo</span>
+      <h1>Break a pipeline. Watch Agent M fix it.</h1>
+      <p class="lede">Pick a failure, run the job and follow every step: the error is classified, transient faults are retried, schema problems get a fix query, and risky changes wait for you. This runs the same rules as our Python engine, against a simulated BigQuery table in your browser.</p>
+    </div>
+  </section>
+
+  <section class="ask-app">
+    <div class="wrap mon-layout">
+      <div class="ask-side">
+        <div class="panel">
+          <h2 class="panel-title">1. Choose what goes wrong</h2>
+          <fieldset class="scen-list" id="scenarios">
+            <legend class="sr-only">Failure scenario</legend>
+          </fieldset>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel-title">2. Set the policy</h2>
+          <label class="check"><input type="checkbox" id="autoApply" checked> Apply SAFE fixes automatically</label>
+          <div class="field">
+            <label for="allowed">Datasets the healer may change</label>
+            <input id="allowed" value="sales" spellcheck="false" autocomplete="off">
+          </div>
+          <p class="side-note">Fixes outside these datasets are never applied. Try clearing it to see a fix get skipped.</p>
+          <button class="btn btn-primary" id="runBtn" type="button">Run job</button>
+        </div>
+
+        <div class="panel">
+          <div class="chat-head bare">
+            <h2 class="panel-title">Target table</h2>
+            <button class="copy-btn" id="resetTable" type="button">Reset</button>
+          </div>
+          <p class="mono-sm" id="tableId"></p>
+          <ul class="schema" id="schema"></ul>
+          <p class="side-note">Partitioned by <code>order_ts</code>, clustered by <code>region</code>. Columns changed by a fix are highlighted.</p>
+        </div>
+      </div>
+
+      <div class="mon-main">
+        <div class="console">
+          <div class="console-bar">
+            <span id="consoleTitle">job_monitor · load_orders</span>
+            <span class="live idle" id="liveTag">idle</span>
+          </div>
+          <pre class="log mon-log" id="monLog" aria-live="polite"></pre>
+          <div class="console-foot">
+            <div>status<strong id="statStatus">—</strong></div>
+            <div>attempts<strong id="statAttempts">—</strong></div>
+            <div>run time<strong id="statTime">—</strong></div>
+          </div>
+        </div>
+        <p class="outcome" id="outcome" hidden></p>
+
+        <div class="table-card">
+          <header>
+            <div class="tabs" role="tablist" aria-label="Monitoring tables">
+              <button class="tab" role="tab" type="button" data-tab="job_runs" aria-selected="true">job_runs</button>
+              <button class="tab" role="tab" type="button" data-tab="job_events" aria-selected="false">job_events</button>
+              <button class="tab" role="tab" type="button" data-tab="healing_actions" aria-selected="false">healing_actions</button>
+            </div>
+            <span class="tag" id="rowCount">0 rows</span>
+          </header>
+          <div class="table-scroll mon-table" id="tableView" role="tabpanel"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">/building-blocks</span>
+        <h2>Try the parts on their own.</h2>
+        <p class="lede">The run above is built from two small, deterministic pieces. Paste your own error or SQL to see how each one decides.</p>
+      </div>
+      <div class="tools">
+        <div class="panel">
+          <h3 class="panel-title">Error classifier</h3>
+          <p class="side-note">Turns an exception into a category the retry and heal logic can act on. Message rules run first because BigQuery reuses HTTP codes.</p>
+          <div class="presets" id="clsPresets"></div>
+          <div class="field">
+            <label for="clsText">Error message</label>
+            <textarea id="clsText" rows="4" spellcheck="false"></textarea>
+          </div>
+          <div class="field">
+            <label for="clsType">Exception type</label>
+            <select id="clsType">
+              <option>BadRequest</option><option>Forbidden</option><option>NotFound</option>
+              <option>TooManyRequests</option><option>ServiceUnavailable</option><option>InternalServerError</option>
+              <option>DeadlineExceeded</option><option>ConnectionError</option><option>TimeoutError</option>
+              <option>PermissionError</option><option>FileNotFoundError</option>
+              <option>KeyError</option><option>ValueError</option><option>TypeError</option><option>Exception</option>
+            </select>
+          </div>
+          <dl class="result" id="clsResult"></dl>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-title">SQL guard</h3>
+          <p class="side-note">The gate between an AI agent and your warehouse. Only two statement shapes can ever run on their own, and only after checking the live table above.</p>
+          <div class="presets" id="sqlPresets"></div>
+          <div class="field">
+            <label for="sqlText">Proposed SQL</label>
+            <textarea id="sqlText" rows="4" spellcheck="false"></textarea>
+          </div>
+          <dl class="result" id="sqlResult"></dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">/in-production</span>
+        <h2>What runs in your cloud.</h2>
+        <p class="lede">In production the same engine writes to BigQuery tables in your project, and an AI agent picks up the failures the rules can't fix.</p>
+      </div>
+      <div class="guard">
+        <div><h3>Wrap any Python job</h3><p>JobMonitor records every run, step, warning, retry and error to <code>ops_monitoring</code>. Killed jobs show up as runs that never finished.</p></div>
+        <div><h3>Rule-based healer</h3><p>Schema drift is diffed against the live table. Lossless fixes run after a dry run; anything that rewrites data is stored for approval.</p></div>
+        <div><h3>Log-analysis agent</h3><p>Every 15 minutes, Claude investigates new failed runs with read-only tools and proposes SQL. The SQL guard decides what may run.</p></div>
+      </div>
+      <pre class="code" aria-label="Example: wrapping a job"><span class="c"># one wrapper around the job you already have</span>
+monitor = JobMonitor(<span class="s">"load_orders"</span>, pipeline=<span class="s">"sales_daily"</span>,
+                     healer=Healer(client, allowed_datasets={<span class="s">"sales"</span>}))
+monitor.run(load_orders, max_retries=3)
+
+<span class="c"># the agent, scheduled on Cloud Composer</span>
+python log_agent.py --datasets sales,finance --since-hours 24 --apply</pre>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="index.html#contact">Request early access</a>
+        <a class="btn btn-ghost" href="index.html#agent-m">How Agent M works</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 AgentM. AI &amp; data engineering.</span>
+    <nav aria-label="Footer">
+      <a href="index.html#services">Services</a>
+      <a href="index.html#agent-m">Agent M</a>
+      <a href="monitor.html">Live demo</a>
+      <a href="ask.html">Ask your docs</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script type="module" src="js/monitor.js"></script>
+</body>
+</html>

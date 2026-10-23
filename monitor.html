@@ -39,7 +39,7 @@
     <div class="wrap">
       <span class="label">/agent-m · live demo</span>
       <h1>Break a pipeline. Watch Agent M fix it.</h1>
-      <p class="lede">Pick a failure, run the job and follow every step: the error is classified, transient faults are retried, schema problems get a fix query, and risky changes wait for you. This runs the same rules as our Python engine, against a simulated BigQuery table in your browser.</p>
+      <p class="lede">Pick a failure, run the job and follow every step: the error is classified, transient faults are retried, schema problems get a fix query, risky changes wait for you, and runs that look wrong compared with their history raise an alert. This runs the same rules as our Python engine, against a simulated BigQuery table in your browser.</p>
     </div>
   </section>
 
@@ -61,6 +61,11 @@
             <input id="allowed" value="sales" spellcheck="false" autocomplete="off">
           </div>
           <p class="side-note">Fixes outside these datasets are never applied. Try clearing it to see a fix get skipped.</p>
+          <div class="field">
+            <label for="sla">SLA (minutes)</label>
+            <input id="sla" type="number" min="0" step="0.5" value="2" inputmode="decimal">
+          </div>
+          <label class="check"><input type="checkbox" id="alerts" checked> Alert #data-alerts on Slack (simulated)</label>
           <button class="btn btn-primary" id="runBtn" type="button">Run job</button>
         </div>
 
@@ -89,6 +94,7 @@
           </div>
         </div>
         <p class="outcome" id="outcome" hidden></p>
+        <div class="slack" id="slack" hidden aria-live="polite"></div>
 
         <div class="table-card">
           <header>
@@ -156,13 +162,14 @@
         <p class="lede">In production the same engine writes to BigQuery tables in your project, and an AI agent picks up the failures the rules can't fix.</p>
       </div>
       <div class="guard">
-        <div><h3>Wrap any Python job</h3><p>JobMonitor records every run, step, warning, retry and error to <code>ops_monitoring</code>. Killed jobs show up as runs that never finished.</p></div>
+        <div><h3>Wrap any Python job</h3><p>JobMonitor records every run, step, warning, retry and error to <code>ops_monitoring</code>, checks each good run against its history, and alerts on-call. Killed jobs show up as runs that never finished.</p></div>
         <div><h3>Rule-based healer</h3><p>Schema drift is diffed against the live table. Lossless fixes run after a dry run; anything that rewrites data is stored for approval.</p></div>
         <div><h3>Log-analysis agent</h3><p>Every 15 minutes, Claude investigates new failed runs with read-only tools and proposes SQL. The SQL guard decides what may run.</p></div>
       </div>
       <pre class="code" aria-label="Example: wrapping a job"><span class="c"># one wrapper around the job you already have</span>
 monitor = JobMonitor(<span class="s">"load_orders"</span>, pipeline=<span class="s">"sales_daily"</span>,
-                     healer=Healer(client, allowed_datasets={<span class="s">"sales"</span>}))
+                     healer=Healer(client, allowed_datasets={<span class="s">"sales"</span>}),
+                     sla_seconds=900, notifier=SlackNotifier.from_env())
 monitor.run(load_orders, max_retries=3)
 
 <span class="c"># the agent, scheduled on Cloud Composer</span>

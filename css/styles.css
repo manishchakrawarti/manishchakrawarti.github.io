@@ -308,11 +308,18 @@ code { font-family: var(--f-mono); font-size: .88em; color: var(--fg); }
 .live.idle { color: var(--dim); }
 .live.idle::before { background: var(--dim); animation: none; }
 .mon-log { white-space: pre-wrap; overflow-wrap: anywhere; height: 340px; overflow-y: auto; }
-.mon-log .ln { padding-left: 16ch; text-indent: -16ch; }
+.mon-log .ln { padding-left: 17ch; text-indent: -17ch; }
 .outcome { font-size: var(--s-sm); padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); }
 .outcome.success { border-color: rgba(79,209,181,.4); color: var(--ok); }
 .outcome.healed { border-color: rgba(242,181,68,.45); color: var(--amber); }
 .outcome.failed { border-color: rgba(255,122,110,.4); color: var(--fail); }
+.outcome.anomaly { border-color: rgba(242,181,68,.45); color: var(--amber); }
+.slack { border: 1px solid var(--line); border-left: 3px solid var(--info); border-radius: 10px; background: var(--panel); padding: 12px 14px; display: grid; gap: 6px; font-size: var(--s-sm); }
+.slack[hidden] { display: none; }
+.slack-head { font-family: var(--f-mono); font-size: .72rem; color: var(--dim); }
+.slack-body { display: grid; gap: 2px; overflow-wrap: anywhere; }
+.slack-body b { font-weight: 600; }
+.slack-run { font-family: var(--f-mono); font-size: .72rem; color: var(--dim); margin-top: 4px; }
 .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
 .tab { background: none; border: 1px solid transparent; color: var(--muted); font: 500 .75rem var(--f-mono); padding: 5px 10px; border-radius: 6px; cursor: pointer; }
 .tab:hover { color: var(--fg); }

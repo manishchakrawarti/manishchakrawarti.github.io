@@ -1,5 +1,5 @@
-// Agent M live demo: a browser port of job_monitoring (classifier.py, healer.py, sql_guard.py
-// and the JobMonitor run loop) running against a simulated BigQuery table.
+// Agent M live demo: a browser port of job_monitoring (classifier.py, healer.py, sql_guard.py,
+// health.py and the JobMonitor run loop) running against a simulated BigQuery table.
 // Same rules and the same SQL as the Python engine. Nothing leaves the page.
 
 /* ---------- Simulated warehouse ---------- */
@@ -54,8 +54,11 @@ const RULES = [
   ["SCHEMA_TYPE_MISMATCH", false, true, /ArrowInvalid|ArrowTypeError|was truncated converting to|tried to convert to/i],
   ["DATA_PARSE_ERROR", false, true, /Could not parse '(?<value>[^']*)' as (?<target_type>\w+) for field (?<field>\w+)/i],
   ["SCHEMA_MISSING_COLUMN", false, true, /No such field: (?<field>\w+)/i],
-  ["SCHEMA_REQUIRED_NULL", false, true, /Required field (?<field>[\w.]+) cannot be null/i],
-  ["SCHEMA_REQUIRED_NULL", false, true, /Missing required field: (?<field>[\w.]+)/i],
+  // Load job with a new source column: "Provided Schema does not match Table ... Cannot add fields (field: x)"
+  ["SCHEMA_MISSING_COLUMN", false, true, /Cannot add fields \(field: (?<field>\w+)\)/i],
+  // Nested fields are dotted (a.b); BigQuery ends the message with '.', which must not be captured.
+  ["SCHEMA_REQUIRED_NULL", false, true, /Required field (?<field>\w+(?:\.\w+)*) cannot be null/i],
+  ["SCHEMA_REQUIRED_NULL", false, true, /Missing required field: (?<field>\w+(?:\.\w+)*)/i],
   ["TABLE_NOT_FOUND", false, false, /Not found: Table (?<table>[\w\-.:]+)/i],
   ["PERMISSION_DENIED", false, false, /Access Denied|Permission .+ denied/i],
   ["TRANSIENT_NETWORK", true, false, /Connection (?:reset|aborted|refused)|timed out|Deadline Exceeded|backendError|internalError/i],
@@ -145,7 +148,9 @@ class Healer {
       let actions = this.diff(target, source);
       if (d.field) {   // the error named a column -> focus on it
         const focused = actions.filter((a) => (a.column || "").toLowerCase() === d.field.toLowerCase());
-        if (focused.length) actions = focused;
+        // Other lossless drift in the same source would fail the very next
+        // attempt, so fix it in this pass too. Risky changes stay focused.
+        if (focused.length) actions = [...focused, ...actions.filter((a) => a.risk === "SAFE" && !focused.includes(a))];
       }
       return actions;
     }
@@ -316,6 +321,43 @@ function grade(sql, allowedDatasets) {
   return { risk: "NEEDS_APPROVAL", reason: `${cur} -> ${newType} is not an in-place widening` };
 }
 
+/* ---------- health.py ---------- */
+
+// Median duration and rows of the job's last good runs (v_job_runs_latest: last row per run wins).
+function baseline(jobName, excludeRunId, runs = 30) {
+  const latest = new Map();
+  for (const r of db.job_runs) if (r.job_name === jobName && r.run_id !== excludeRunId) latest.set(r.run_id, r);
+  const good = [...latest.values()]
+    .filter((r) => r.status === "SUCCESS" || r.status === "HEALED")
+    .sort((a, b) => b.started_at.localeCompare(a.started_at))
+    .slice(0, runs);
+  const median = (xs) => {
+    const v = xs.filter((x) => x != null).sort((a, b) => a - b);
+    return v.length ? v[Math.floor(v.length / 2)] : null;
+  };
+  return { runs: good.length, median_sec: median(good.map((r) => r.duration_sec)), median_rows: median(good.map((r) => r.rows_written)) };
+}
+
+function checkRun({ durationSec, rowsWritten, base, slaSeconds = null, slowFactor = 3, drop = 0.5, spike = 3, minHistory = 5, minExtraSec = 60 }) {
+  const found = [];
+  const n = (x) => Math.round(x).toLocaleString("en-US");
+  const secs = (x) => `${x.toFixed(x < 1 ? 2 : x < 10 ? 1 : 0)}s`;
+  if (slaSeconds && durationSec > slaSeconds) {
+    found.push({ kind: "SLA_MISSED", message: `run took ${secs(durationSec)}, SLA is ${secs(slaSeconds)}` });
+  }
+  if (!base || base.runs < minHistory) return found;
+  if (base.median_sec && durationSec > slowFactor * base.median_sec && durationSec - base.median_sec >= minExtraSec) {
+    found.push({ kind: "SLOW_RUN", message: `run took ${secs(durationSec)}, ${(durationSec / base.median_sec).toFixed(1)}x the usual ${secs(base.median_sec)}` });
+  }
+  const med = base.median_rows;
+  if (rowsWritten != null && med) {
+    if (rowsWritten === 0) found.push({ kind: "NO_ROWS", message: `no rows written; usually about ${n(med)}` });
+    else if (rowsWritten < (1 - drop) * med) found.push({ kind: "ROW_DROP", message: `${n(rowsWritten)} rows written, ${Math.round((1 - rowsWritten / med) * 100)}% below the usual ${n(med)}` });
+    else if (rowsWritten > spike * med) found.push({ kind: "ROW_SPIKE", message: `${n(rowsWritten)} rows written, ${(rowsWritten / med).toFixed(1)}x the usual ${n(med)}` });
+  }
+  return found;
+}
+
 /* ---------- Scenarios: what the source sends this time ---------- */
 
 const SOURCE = { order_id: "STRING", order_ts: "TIMESTAMP", customer_id: "STRING", qty: "INT64", amount: "INT64", region: "STRING" };
@@ -327,6 +369,8 @@ const SCENARIOS = [
     source: { ...SOURCE, amount: "FLOAT64" } },
   { id: "newcol", name: "A new source column", blurb: "The upstream team adds discount_pct without telling anyone.",
     source: { ...SOURCE, discount_pct: "FLOAT64" } },
+  { id: "multi", name: "Two changes at once", blurb: "Decimals in amount and a new discount_pct column, in the same file.",
+    source: { ...SOURCE, amount: "FLOAT64", discount_pct: "FLOAT64" } },
   { id: "quota", name: "Rate limit hit", blurb: "BigQuery throttles table updates twice in a row.",
     transient: [quotaError, quotaError] },
   { id: "network", name: "Network blip", blurb: "The connection drops once mid-load.",
@@ -339,6 +383,10 @@ const SCENARIOS = [
     bad: { field: "qty", value: "N/A" } },
   { id: "partition", name: "Partition column changes", blurb: "order_ts arrives as STRING.",
     source: { ...SOURCE, order_ts: "STRING" } },
+  { id: "slow", name: "Run takes 6x longer", blurb: "The load succeeds, but a slot shortage makes it crawl.",
+    slow: 6 },
+  { id: "rowdrop", name: "Most rows go missing", blurb: "The file arrives truncated: 812 rows instead of about 41,000.",
+    rows: 812 },
   { id: "perm", name: "Permission removed", blurb: "The job's service account lost write access.",
     permission: true },
   { id: "clean", name: "Healthy run", blurb: "Nothing goes wrong. The baseline." },
@@ -354,7 +402,7 @@ function loadTable(sc, attempt) {
   const fields = new Map(table.schema.map((f) => [f.name.toLowerCase(), f]));
   for (const [col, srcType] of Object.entries(sc.source || SOURCE)) {
     const f = fields.get(col.toLowerCase());
-    if (!f) throw new BQError("BadRequest", 400, `Error while reading data, error message: JSON parsing error in row starting at position 0: No such field: ${col}.`, "invalid");
+    if (!f) throw new BQError("BadRequest", 400, `Provided Schema does not match Table ${TABLE_REF}. Cannot add fields (field: ${col})`, "invalid");
     const cur = norm(f.type);
     if (cur !== srcType && !widens(srcType, cur)) {
       throw new BQError("BadRequest", 400, `Provided Schema does not match Table ${TABLE_REF}. Field ${f.name} has changed type from ${legacy(cur)} to ${legacy(srcType)}`, "invalid");
@@ -369,7 +417,7 @@ function loadTable(sc, attempt) {
       throw new BQError("BadRequest", 400, `Error while reading data, error message: Could not parse '${sc.bad.value}' as ${norm(f.type)} for field ${f.name} (position 3) starting at location 1182 with message 'Unable to parse'`, "invalid");
     }
   }
-  return 41208 + Math.floor(Math.random() * 900);
+  return sc.rows ?? 41208 + Math.floor(Math.random() * 900);
 }
 
 /* ---------- monitor.py: the run loop ---------- */
@@ -383,10 +431,28 @@ const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toSt
 const clock = { offset: 0, now() { return new Date(Date.now() + this.offset); }, advance(sec) { this.offset += sec * 1000; } };
 const iso = () => clock.now().toISOString();
 const hms = (d) => d.toTimeString().slice(0, 8);
+const stamp = (d) => (d.toDateString() === clock.now().toDateString() ? "" : `${d.toISOString().slice(5, 10)} `) + hms(d);
+
+// Eight nights of normal runs, so the health check has a history to compare with.
+function seedHistory() {
+  for (let day = 8; day >= 1; day--) {
+    const start = new Date(clock.now().getTime() - day * 86400000);
+    start.setHours(2, 14, 7, 0);
+    const dur = 22 + Math.random() * 8;
+    const rows = 40800 + Math.floor(Math.random() * 1200);
+    const run = { run_id: uuid(), job_name: "load_orders", pipeline: "sales_daily", environment: "demo", attempt: 1,
+      started_at: start.toISOString(), rows_read: rows, error_category: null, error_message: null, healed: false };
+    const end = new Date(start.getTime() + dur * 1000).toISOString();
+    db.job_runs.push(
+      { ...run, recorded_at: start.toISOString(), status: "RUNNING", ended_at: null, duration_sec: null, rows_written: 0 },
+      { ...run, recorded_at: end, status: "SUCCESS", ended_at: end, duration_sec: +dur.toFixed(3), rows_written: rows });
+  }
+}
 
 class JobMonitor {
-  constructor(jobName, { pipeline, params, healer }) {
-    Object.assign(this, { jobName, pipeline, params, healer });
+  constructor(jobName, { pipeline, params, healer, slaSeconds = null, notifier = null }) {
+    Object.assign(this, { jobName, pipeline, params, healer, slaSeconds, notifier });
+    this.actions = [];
     this.runId = uuid();
     this.metrics = { rows_read: 0, rows_written: 0 };
     this.context = {};
@@ -453,12 +519,13 @@ class JobMonitor {
         }
 
         this.writeRun("FAILED", { cls, exc, healed });
+        await this.alertFailure(cls, exc);
         return { status: "FAILED", cls };
       }
       const status = healed ? "HEALED" : "SUCCESS";
       this.writeRun(status, { healed });
       await this.event("INFO", `job finished: ${status}`, { context: this.metrics });
-      return { status };
+      return { status, anomalies: await this.checkHealth() };
     }
   }
 
@@ -480,7 +547,32 @@ class JobMonitor {
     return applied;
   }
 
+  // Flag a good run that was slow, missed its SLA or moved an unusual number of rows.
+  async checkHealth() {
+    const found = checkRun({
+      durationSec: (clock.now() - this.t0) / 1000, rowsWritten: this.metrics.rows_written,
+      base: baseline(this.jobName, this.runId), slaSeconds: this.slaSeconds,
+    });
+    for (const a of found) await this.event("ANOMALY", a.message, { category: a.kind });
+    if (found.length) await this.notify({ kind: "ANOMALY", title: "finished, but something looks wrong", details: found.map((a) => a.message) });
+    return found;
+  }
+
+  async alertFailure(cls, exc) {
+    const waiting = this.actions.filter((a) => a.status === "PROPOSED" && a.sql);
+    const details = [`${cls.category}: ${exc.message.slice(0, 300)}`, ...waiting.map((a) => `[${a.risk}] ${a.reason}`)];
+    if (waiting.length) await this.notify({ kind: "NEEDS_APPROVAL", title: `failed; ${waiting.length} fix(es) waiting for approval`, details });
+    else await this.notify({ kind: "FAILED", title: `failed: ${cls.category}`, details });
+  }
+
+  async notify(alert) {
+    if (!this.notifier) return;
+    this.notifier({ ...alert, jobName: this.jobName, runId: this.runId });
+    await this.event("NOTIFY", `alert sent: ${alert.title}`, { category: alert.kind });
+  }
+
   async recordAction(a, cls) {
+    this.actions.push(a);
     db.healing_actions.push({
       action_id: uuid(), run_id: this.runId, job_name: this.jobName, created_at: iso(),
       error_category: cls.category, target_table: a.target, column_name: a.column,
@@ -513,13 +605,13 @@ function makeJob(sc) {
   return async (mon) => {
     await mon.withStep("extract", async () => {
       clock.advance(1.2 + Math.random());
-      mon.metrics.rows_read = 41208;
+      mon.metrics.rows_read = sc.rows ?? 41208;
     });
     // What the healer needs to reason about a schema failure.
     mon.context.target_table = TABLE_ID;
     mon.context.source_schema = { ...(sc.source || SOURCE) };
     await mon.withStep("load", async () => {
-      clock.advance(18 + Math.random() * 10);
+      clock.advance((18 + Math.random() * 10) * (sc.slow || 1));
       mon.metrics.rows_written = loadTable(sc, mon.attempt);
     });
   };
@@ -551,7 +643,7 @@ const COLUMNS = {
   healing_actions: ["created_at", "error_category", "column_name", "risk_level", "status", "proposed_sql", "reason", "applied_by"],
 };
 const WIDE = new Set(["error_message", "message", "proposed_sql", "reason"]);
-const LOG_CLASS = { INFO: "i", WARNING: "a", ERROR: "f", RETRY: "a", HEAL: "a" };
+const LOG_CLASS = { INFO: "i", WARNING: "a", ERROR: "f", RETRY: "a", HEAL: "a", ANOMALY: "f", NOTIFY: "i" };
 
 const ui = {
   tab: "job_runs",
@@ -570,6 +662,7 @@ const ui = {
       list.append(label);
     });
     $("tableId").textContent = TABLE_ID;
+    seedHistory();
     document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => this.showTab(b.dataset.tab)));
     $("runBtn").addEventListener("click", () => this.run());
     $("resetTable").addEventListener("click", () => { resetTable(); this.renderSchema(); tools.gradeSql(); });
@@ -583,6 +676,7 @@ const ui = {
     const btn = $("runBtn");
     btn.disabled = true;
     $("outcome").hidden = true;
+    $("slack").hidden = true;
     $("monLog").replaceChildren();
     $("liveTag").textContent = "running";
     $("liveTag").classList.remove("idle");
@@ -591,6 +685,8 @@ const ui = {
       pipeline: "sales_daily",
       params: { ds: clock.now().toISOString().slice(0, 10), scenario: sc.id },
       healer: new Healer({ allowedDatasets: allowedDatasets(), autoApply: $("autoApply").checked }),
+      slaSeconds: (parseFloat($("sla").value) || 0) * 60 || null,
+      notifier: $("alerts").checked ? (alert) => this.showAlert(alert) : null,
     });
     try {
       const result = await mon.run(makeJob(sc));
@@ -607,7 +703,7 @@ const ui = {
     }
   },
 
-  showOutcome({ status, cls }, mon) {
+  showOutcome({ status, cls, anomalies = [] }, mon) {
     const actions = db.healing_actions.filter((a) => a.run_id === mon.runId);
     const waiting = actions.filter(awaitsApproval);
     const skipped = actions.filter((a) => a.status === "SKIPPED");
@@ -615,17 +711,39 @@ const ui = {
     if (status === "SUCCESS") text = mon.attempt > 1
       ? `Succeeded on attempt ${mon.attempt}. The transient error was retried with exponential backoff, and nobody was paged.`
       : "Succeeded first time. One RUNNING row and one SUCCESS row were written to job_runs.";
-    else if (status === "HEALED") text = "Healed. The fix passed the safety rules, was dry-run and applied, and the job re-ran successfully. The change is logged in healing_actions.";
+    else if (status === "HEALED") {
+      const n = actions.filter((a) => a.status === "APPLIED").length;
+      text = n > 1
+        ? `Healed. ${n} safe fixes were dry-run and applied in one pass, and the job re-ran successfully. The changes are logged in healing_actions.`
+        : "Healed. The fix passed the safety rules, was dry-run and applied, and the job re-ran successfully. The change is logged in healing_actions.";
+    }
     else if (waiting.some((a) => a.risk_level === "NEEDS_APPROVAL")) text = "Failed, with a fix waiting for approval. It changes data or the table contract, so it never runs on its own. Review and approve it in healing_actions, then run the job again.";
     else if (waiting.length) text = "Failed, with a safe fix waiting for approval because auto-apply is off. Approve it in healing_actions, then run the job again.";
     else if (skipped.length) text = "Failed. A safe fix was found but skipped because the dataset is not in the allow-list.";
     else if (actions.length) text = `Failed: ${cls.category}. ${actions[0].reason}`;
     else text = `Failed: ${cls.category}. SQL can't fix this one. In production, the log-analysis agent picks up this run within 15 minutes, investigates with read-only tools and tells a person what to do.`;
+    if (anomalies.length) {
+      text = `${status === "HEALED" ? "Healed" : "Succeeded"}, but the health check flagged the run against the last ${baseline(mon.jobName, mon.runId).runs} good runs: ` +
+        anomalies.map((a) => a.message).join("; ") + ".";
+    }
+    if (mon.notifier && (status === "FAILED" || anomalies.length)) text += " An alert went to #data-alerts.";
+    else if (status === "FAILED" || anomalies.length) text += " Alerts are off, so nobody was told.";
     const out = $("outcome");
     out.textContent = text;
-    out.className = `outcome ${status.toLowerCase()}`;
+    out.className = `outcome ${anomalies.length ? "anomaly" : status.toLowerCase()}`;
     out.hidden = false;
     if (waiting.length) this.showTab("healing_actions");
+  },
+
+  showAlert({ kind, title, details, jobName, runId }) {
+    const box = $("slack");
+    const icon = { FAILED: "🔴", NEEDS_APPROVAL: "🔵", ANOMALY: "🟡" }[kind] || "";
+    const body = el("div", "slack-body");
+    const head = el("p");
+    head.append(`${icon} `, el("b", "", jobName), `: ${title}`);
+    body.append(head, ...details.slice(0, 10).map((d) => el("p", "", `• ${d}`)), el("p", "slack-run", `run_id ${runId}`));
+    box.replaceChildren(el("p", "slack-head", "#data-alerts · Agent M"), body);
+    box.hidden = false;
   },
 
   logEvent(row) {
@@ -637,7 +755,7 @@ const ui = {
   logLine(time, cls, tag, message) {
     const line = el("span", "ln");
     if (time) line.append(el("span", "t", time), " ");
-    line.append(el("span", cls, tag.padEnd(6)), " ", el("span", cls === "f" ? "f" : "w", message));
+    line.append(el("span", cls, tag.padEnd(7)), " ", el("span", cls === "f" ? "f" : "w", message));
     const log = $("monLog");
     log.append(line);
     log.scrollTop = log.scrollHeight;
@@ -687,7 +805,7 @@ const ui = {
         const v = row[c];
         const td = el("td", WIDE.has(c) ? "mono wide" : /(_at|_ts)$/.test(c) ? "mono" : "");
         if (["status", "risk_level"].includes(c) && v) td.append(pill(v));
-        else if (/(_at|_ts)$/.test(c) && v) td.textContent = hms(new Date(v));
+        else if (/(_at|_ts)$/.test(c) && v) td.textContent = stamp(new Date(v));
         else td.textContent = v == null || v === "" ? "—" : String(v);
         tr.append(td);
       }

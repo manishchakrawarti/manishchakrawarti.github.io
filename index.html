@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>AgentM | AI &amp; Data Engineering</title>
+  <meta name="description" content="AgentM designs and builds enterprise data platforms and AI agents that keep them healthy. Data engineering, data architecture, data science and agentic AI.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="AgentM home">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+        <rect x="0.75" y="0.75" width="28.5" height="28.5" rx="7" fill="#101823" stroke="#2A3A4D" stroke-width="1.5"/>
+        <path d="M7 21V9.5l8 7.5 8-7.5V21" fill="none" stroke="#E7EDF3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="15" cy="17" r="2.4" fill="#F2B544"/>
+      </svg>
+      <span>Agent<b>M</b></span>
+    </a>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="nav">Menu</button>
+    <nav class="nav" id="nav">
+      <a href="#services">Services</a>
+      <a href="#agent-m">Agent M</a>
+      <a href="#approach">Approach</a>
+      <a href="#engage">Engagements</a>
+      <a class="btn btn-primary" href="#contact">Book a strategy call</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-copy">
+        <span class="label">AI &amp; Data Engineering · Agentic AI</span>
+        <h1>Data platforms that <em>fix themselves.</em></h1>
+        <p class="lede">AgentM designs and builds enterprise data platforms on GCP and multi-cloud, then puts AI agents to work keeping them healthy. Fewer failed jobs, faster answers and lower run costs for your data team.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#contact">Book a strategy call</a>
+          <a class="btn btn-ghost" href="#agent-m">See Agent M at work</a>
+        </div>
+        <p class="stack-line">BigQuery · Dataflow · Airflow · dbt · Spark · Vertex AI · Microsoft Fabric · Power BI</p>
+      </div>
+
+      <div class="console" aria-label="Example: Agent M healing a failed pipeline job">
+        <div class="console-bar">
+          <span>agent-m · orders_daily_load</span>
+          <span class="live">monitoring</span>
+        </div>
+<pre class="log" id="log"><span class="ln"><span class="t">02:14:07</span> <span class="i">run</span>  orders_daily_load  run_id=<span class="w">8841</span></span><span class="ln"><span class="t">02:14:39</span> <span class="f">FAIL</span> Field qty: expected INT64, source sent NUMERIC</span><span class="ln"><span class="t">02:14:40</span> <span class="a">agent</span> reading logs, schema history, last 30 runs</span><span class="ln"><span class="t">02:14:52</span> <span class="a">agent</span> cause: schema drift in source erp.orders</span><span class="ln"><span class="t">02:14:53</span> <span class="a">agent</span> proposed fix:</span><span class="ln">         <span class="w">ALTER TABLE sales.orders_raw</span></span><span class="ln">         <span class="w">ALTER COLUMN qty SET DATA TYPE NUMERIC;</span></span><span class="ln"><span class="t">02:14:53</span> <span class="i">policy</span> type widening: auto-approve</span><span class="ln"><span class="t">02:15:01</span> <span class="i">retry</span> 1/3 ...</span><span class="ln"><span class="t">02:17:19</span> <span class="ok">OK</span>   41,208 rows loaded · fix logged for audit</span><span class="ln"><span class="t">02:17:19</span> <span class="cursor"></span></span></pre>
+        <div class="console-foot">
+          <div>time to fix<strong>3m 12s</strong></div>
+          <div>people paged<strong>0</strong></div>
+          <div>SLA<strong>met</strong></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="metrics" aria-label="Results">
+    <div class="wrap">
+      <span class="tag">Sample figures · replace with your own</span>
+      <div class="metric-row">
+        <div class="metric"><strong>70%</strong><span>fewer manual job reruns</span></div>
+        <div class="metric"><strong>&lt;5 min</strong><span>median time to fix a failed job</span></div>
+        <div class="metric"><strong>40%</strong><span>lower warehouse run cost</span></div>
+        <div class="metric"><strong>24/7</strong><span>pipeline coverage</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="services">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">/services</span>
+        <h2>From raw data to agents that act on it.</h2>
+        <p class="lede">Four practices, one senior team. We build the foundation, model the business on top of it, and automate the work that keeps it running.</p>
+      </div>
+      <div class="services">
+        <article class="svc">
+          <h3>Data Engineering</h3>
+          <p>Reliable pipelines that land the right data on time, every time.</p>
+          <ul>
+            <li>Batch and streaming ingestion</li>
+            <li>ELT with tested, versioned transformations</li>
+            <li>Orchestration, monitoring and cost control</li>
+          </ul>
+          <div class="chips"><span class="chip">BigQuery</span><span class="chip">Dataflow</span><span class="chip">Airflow</span><span class="chip">dbt</span><span class="chip">Spark</span></div>
+        </article>
+        <article class="svc">
+          <h3>Data Architecture</h3>
+          <p>A platform designed for the next five years, not the next sprint.</p>
+          <ul>
+            <li>Lakehouse and medallion design (bronze, silver, gold)</li>
+            <li>Data modelling, governance and lineage</li>
+            <li>Row- and column-level security</li>
+          </ul>
+          <div class="chips"><span class="chip">GCP</span><span class="chip">AWS</span><span class="chip">Azure</span><span class="chip">Microsoft Fabric</span></div>
+        </article>
+        <article class="svc">
+          <h3>Data Science &amp; ML</h3>
+          <p>Models that answer real business questions and stay accurate in production.</p>
+          <ul>
+            <li>Forecasting, churn and propensity models</li>
+            <li>Feature stores and MLOps</li>
+            <li>Analytics and executive dashboards</li>
+          </ul>
+          <div class="chips"><span class="chip">Vertex AI</span><span class="chip">Python</span><span class="chip">BigQuery ML</span><span class="chip">Power BI</span></div>
+        </article>
+        <article class="svc">
+          <h3>Agentic AI</h3>
+          <p>AI agents that do real work on your data, with people in control.</p>
+          <ul>
+            <li>Self-healing pipelines and data-quality agents</li>
+            <li>Natural-language analytics over your warehouse</li>
+            <li>Approval workflows and full audit trails</li>
+          </ul>
+          <div class="chips"><span class="chip">Gemini</span><span class="chip">Claude</span><span class="chip">LangGraph</span><span class="chip">MCP</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="block product" id="agent-m">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">/agent-m · product</span>
+        <h2>Meet Agent M. It watches every job and fixes what breaks.</h2>
+        <p class="lede">Agent M is our self-healing monitor for Python and BigQuery jobs. It records every run, reads the logs when something fails, and writes the fix. Safe fixes apply on their own. Everything else goes to your team with the diagnosis already done.</p>
+      </div>
+
+      <div class="product-grid">
+        <ol class="steps">
+          <li><div><h3>Capture</h3><p>Every run writes its metadata to tables: start, end, rows, retries, warnings and errors.</p></div></li>
+          <li><div><h3>Detect</h3><p>Failures, slow runs, missed SLAs and unusual row counts are flagged as they happen.</p></div></li>
+          <li><div><h3>Diagnose</h3><p>A log-analysis agent compares the failure with schema history and past runs to find the cause.</p></div></li>
+          <li><div><h3>Heal</h3><p>It writes the fix query, such as an ALTER TABLE for schema drift, and retries the job.</p></div></li>
+          <li><div><h3>Learn</h3><p>Each fix is logged with its reason, so you get an audit trail and fewer repeat failures.</p></div></li>
+        </ol>
+
+        <div class="table-card">
+          <header>
+            <span class="label">job_runs · last 6 runs</span>
+            <span class="tag">Example data</span>
+          </header>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Job</th><th>Status</th><th>Retries</th><th>Duration</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">orders_daily_load</td><td><span class="pill p-heal">healed</span></td><td>1</td><td>3m 12s</td><td class="mono">ALTER COLUMN qty</td></tr>
+                <tr><td class="mono">customer_dim_scd2</td><td><span class="pill p-ok">success</span></td><td>0</td><td>1m 48s</td><td class="mono">—</td></tr>
+                <tr><td class="mono">inventory_stream</td><td><span class="pill p-ok">success</span></td><td>0</td><td>live</td><td class="mono">—</td></tr>
+                <tr><td class="mono">finance_gl_extract</td><td><span class="pill p-wait">needs approval</span></td><td>2</td><td>6m 05s</td><td class="mono">drop column proposed</td></tr>
+                <tr><td class="mono">marketing_attrib</td><td><span class="pill p-heal">healed</span></td><td>1</td><td>4m 40s</td><td class="mono">quota backoff</td></tr>
+                <tr><td class="mono">vendor_feed_sftp</td><td><span class="pill p-fail">failed</span></td><td>3</td><td>0m 22s</td><td class="mono">on-call paged</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="guard">
+        <div><h3>People stay in control</h3><p>You set the policy. Low-risk fixes run on their own; risky ones wait for approval.</p></div>
+        <div><h3>Runs in your cloud</h3><p>Agent M deploys inside your project. Your data and logs never leave it.</p></div>
+        <div><h3>Light to run</h3><p>No heavy orchestration platform needed. It fits alongside the jobs you already have.</p></div>
+      </div>
+
+      <div class="cta-row"><a class="btn btn-primary" href="#contact">Request early access</a></div>
+    </div>
+  </section>
+
+  <section class="block" id="approach">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">/approach</span>
+        <h2>How an engagement runs.</h2>
+      </div>
+      <div class="approach">
+        <div class="phase"><h3>Assess</h3><p>Audit your data estate, costs and pain points in two weeks.</p></div>
+        <div class="phase"><h3>Architect</h3><p>Design the target platform and a phased roadmap.</p></div>
+        <div class="phase"><h3>Build</h3><p>Deliver pipelines, models and dashboards in short releases.</p></div>
+        <div class="phase"><h3>Automate</h3><p>Add Agent M and AI agents to cut manual work.</p></div>
+        <div class="phase"><h3>Operate</h3><p>Run and improve the platform with your team, or for it.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="engage">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">/engagements</span>
+        <h2>Work with us the way that suits you.</h2>
+      </div>
+      <div class="models">
+        <article class="model">
+          <h3>Fixed-scope project</h3>
+          <p>A defined outcome, timeline and price. A migration, a new lakehouse or a first AI agent.</p>
+          <p class="fit">Best for: a clear goal with a deadline</p>
+        </article>
+        <article class="model feature">
+          <h3>Dedicated data team</h3>
+          <p>Senior data engineers, architects and data scientists working as part of your team.</p>
+          <p class="fit">Best for: ongoing roadmaps and scale-up</p>
+        </article>
+        <article class="model">
+          <h3>Managed data operations</h3>
+          <p>We run your pipelines around the clock, with Agent M handling first response.</p>
+          <p class="fit">Best for: keeping critical jobs on time</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="industries">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">/industries</span>
+        <h2>Built for data that matters.</h2>
+        <p class="lede">We work with teams where a late or wrong number has a real cost.</p>
+      </div>
+      <div class="inds">
+        <span class="ind">Retail &amp; e-commerce</span>
+        <span class="ind">Banking &amp; financial services</span>
+        <span class="ind">Healthcare</span>
+        <span class="ind">Manufacturing</span>
+        <span class="ind">Logistics</span>
+        <span class="ind">Media &amp; entertainment</span>
+        <span class="ind">Energy</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="proof">
+    <div class="wrap">
+      <div class="proof">
+        <div>
+          <span class="tag">Placeholder testimonial · replace with a real client quote</span>
+          <blockquote style="margin-top:18px">“Our nightly loads used to break twice a week. Now most failures are fixed before anyone logs in.”</blockquote>
+          <p class="cite">Head of Data · [Client company]</p>
+        </div>
+        <div class="logos" aria-label="Client logo placeholders">
+          <div class="logo-slot">client logo</div><div class="logo-slot">client logo</div><div class="logo-slot">client logo</div>
+          <div class="logo-slot">client logo</div><div class="logo-slot">client logo</div><div class="logo-slot">client logo</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="contact">
+    <div class="wrap">
+      <div class="contact">
+        <div class="contact-info">
+          <div class="sec-head">
+            <span class="label">/contact</span>
+            <h2>Tell us about your data platform.</h2>
+            <p class="lede">A 30-minute call with a senior architect. You leave with a short list of quick wins, whether or not we work together.</p>
+          </div>
+          <div class="info-row">
+            <span class="label">Email</span>
+            <div class="copy-line"><span id="email">hello@agentm.ai</span><button class="copy-btn" id="copyEmail" type="button">Copy</button></div>
+          </div>
+          <div class="info-row">
+            <span class="label">Where we work</span>
+            <span>Based in India. Working with teams in the US, UK, Europe and the Middle East.</span>
+          </div>
+        </div>
+
+        <form id="contactForm" novalidate>
+          <div class="field-row">
+            <div class="field"><label for="f-name">Name</label><input id="f-name" name="name" autocomplete="name" required></div>
+            <div class="field"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" autocomplete="email" required></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label for="f-company">Company</label><input id="f-company" name="company" autocomplete="organization"></div>
+            <div class="field"><label for="f-need">What do you need?</label>
+              <select id="f-need" name="need">
+                <option>Data engineering</option>
+                <option>Data architecture</option>
+                <option>Data science &amp; ML</option>
+                <option>Agentic AI</option>
+                <option>Agent M early access</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label for="f-msg">Tell us a bit more</label><textarea id="f-msg" name="message" placeholder="Your current stack, team size and what is slowing you down"></textarea></div>
+          <button class="btn btn-primary" type="submit">Send message</button>
+          <p class="form-note" id="formNote">Preview form. Connect it to your inbox or CRM before launch.</p>
+          <p class="form-msg" id="formMsg" hidden></p>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 AgentM. AI &amp; data engineering.</span>
+    <nav aria-label="Footer">
+      <a href="#services">Services</a>
+      <a href="#agent-m">Agent M</a>
+      <a href="#approach">Approach</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
